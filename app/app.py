@@ -13,7 +13,8 @@ from bottle import (
     debug,
     post,
 )
-from propagate import generate_predicts
+from propagate_orekit import generate_predicts
+from propagate_py_sgp4 import generate_skyfield_predicts
 import requests
 
 # Set up spacecraft and viewing location options:
@@ -48,8 +49,9 @@ def generate():
 
     # Fetch TLE from spacetrack
     tle = fetch_tle(spacecraft_dict[sc_name])
+    days = float(request_params["duration"][0])
 
-    plt_lst = generate_predicts(tle, station, request_params["duration"][0], sc_name)
+    plt_lst = generate_skyfield_predicts(tle, station, days, sc_name)
     print("- Done!")
 
     args = ["plots.tpl", locations_dict.keys(), spacecraft_dict.keys(), plt_lst]
@@ -98,7 +100,7 @@ def fetch_tle(norad_id: str) -> list:
         # Request TLE:
         resp = session.get(api_url)
         resp = resp.text.split('\n')
-        tle = [resp[1].strip(), resp[2].strip()]
+        tle = [resp[0].strip(), resp[1].strip(), resp[2].strip()]
         print(f'- Found TLE for {resp[0].strip()}')
         session.close()
     return tle

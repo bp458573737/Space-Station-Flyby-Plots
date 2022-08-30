@@ -117,6 +117,9 @@ def generate_predicts(tle: list, station: dict, days: float, sc: str) -> list:
     # Find and label passes in the main dataframe:
     visible_data["time_delta"] = visible_data["datetime"].diff().dt.total_seconds()
     pass_start_indices = visible_data[visible_data["time_delta"] > step_sec].index
+    if len(pass_start_indices == 0):
+        # then there is only one pass
+        pass_start_indices = [visible_data.shape[0] - 1]
 
     visible_data["azimuth"] = visible_data["pv"].apply(
         lambda x: sta1Frame.getAzimuth(x.getPosition(), inertialFrame, x.getDate())
