@@ -1,5 +1,8 @@
-# After installing OREKIT via 'conda install -c conda-forge orekit',
-# put the 'orekit.zip' data file into the project folder
+# The main app. Contains routes, smaller functions, and starts the server.
+# - This app will present a UI in the browser to configure satellite flyby predicts for a location
+# and specific satellite.
+# - A 'generate' button will then call either a propagator from the OREKIT or Skyfield astrodynamics
+# libraries, and the data will be plotted. The plots will appear on the main UI page below the inputs
 
 from bottle import (
     redirect,
@@ -13,7 +16,6 @@ from bottle import (
     debug,
     post,
 )
-from propagate_orekit import generate_predicts
 from propagate_py_sgp4 import generate_skyfield_predicts
 import requests
 
@@ -51,6 +53,13 @@ def generate():
     tle = fetch_tle(spacecraft_dict[sc_name])
     days = float(request_params["duration"][0])
 
+    # Here is where you can toggle between propagation with Skyfield or OREKIT
+    # - OREKIT:
+    #   from propagate_orekit import generate_orekit_predicts
+    #   plt_lst = generate_orekit_predicts(tle, station, days, sc_name)
+    # - Skyfield:
+    #   from propagate_py_sgp4 import generate_skyfield_predicts
+    #   plt_lst = generate_skyfield_predicts(tle, station, days, sc_name)
     plt_lst = generate_skyfield_predicts(tle, station, days, sc_name)
     print("- Done!")
 
@@ -60,7 +69,7 @@ def generate():
 
 @route("/generating")
 def generating():
-    """ Simple waiting page with spinner while propagation takes place. Will flesh this out with Alpine"""
+    """Simple waiting page with spinner while propagation takes place. Will flesh this out with Alpine"""
     args = ["spin.tpl", locations_dict.keys(), spacecraft_dict.keys()]
     return template("main_view.tpl", content=args)
 
@@ -80,18 +89,20 @@ def server_static(filepath):
 
 def fetch_tle(norad_id: str) -> list:
     """Logs into spacetrack.org and downloads the latest TLE based on the input NORAD ID"""
-    cred_file = 'spacetrack_login.txt'
+    cred_file = "spacetrack_login.txt"
     uri_base = "https://www.space-track.org"
     request_login = "/ajaxauth/login"
 
     # Fetch login credentials:
-    with open(cred_file, 'r') as f:
+    with open(cred_file, "r") as f:
         creds = f.readlines()
-    site_cred = {'identity': creds[0].strip(), 'password': creds[1].strip()}
+    site_cred = {"identity": creds[0].strip(), "password": creds[1].strip()}
 
     # The API below is set to return a '3le': First line label, followed by TLE lines
-    api_url = f"https://www.space-track.org/basicspacedata/query/class/tle_latest/NORAD_CAT_ID/{norad_id}/" \
-              f"orderby/OBJECT_ID asc/limit/2/format/3le/emptyresult/show"
+    api_url = (
+        f"https://www.space-track.org/basicspacedata/query/class/tle_latest/NORAD_CAT_ID/{norad_id}/"
+        f"orderby/OBJECT_ID asc/limit/2/format/3le/emptyresult/show"
+    )
 
     with requests.Session() as session:
         # Log in:
@@ -99,9 +110,9 @@ def fetch_tle(norad_id: str) -> list:
 
         # Request TLE:
         resp = session.get(api_url)
-        resp = resp.text.split('\n')
+        resp = resp.text.split("\n")
         tle = [resp[0].strip(), resp[1].strip(), resp[2].strip()]
-        print(f'- Found TLE for {resp[0].strip()}')
+        print(f"- Found TLE for {resp[0].strip()}")
         session.close()
     return tle
 

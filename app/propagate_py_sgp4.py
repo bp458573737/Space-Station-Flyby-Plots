@@ -20,11 +20,13 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -
     pd.options.mode.chained_assignment = None  # default='warn'
 
     # Time array: from now until n days at 1 sec intervals
-    secs = int(days * 24 * 60 * 60)     # total seconds in propagation interval
-    step_sec = 1.0                      # time step size
+    secs = int(days * 24 * 60 * 60)  # total seconds in propagation interval
+    step_sec = 1.0  # time step size
     now = datetime.utcnow()
-    now = now.replace(microsecond=0).replace(tzinfo=utc)  # utc obj is from skyfield, but could also use datetime.timezone.utc
-    
+    now = now.replace(microsecond=0).replace(
+        tzinfo=utc
+    )  # utc obj is from skyfield, but could also use datetime.timezone.utc
+
     # Set min elevation to filter out useless passes
     min_el = 5.0  # degrees
 
@@ -38,22 +40,22 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -
     # Build station to sat vector object which will be propagated via time-steps
     stn_to_sat_vec = satellite - station_sf
 
-    print('- Starting propagation...')
+    print("- Starting propagation...")
 
     # Create list of timescale objects which will seed a dataframe for data:
     datetimes = [(now + timedelta(seconds=t)) for t in range(secs + 1)]
     timescales = ts.from_datetimes(datetimes)
 
     # Set up dataframe with time-series and fill columns with vectorized functions:
-    prop_data = pd.DataFrame(datetimes, columns=['datetime'])
+    prop_data = pd.DataFrame(datetimes, columns=["datetime"])
 
     # - get list of sat-stn vectors at time instances. This is essentially the propagator
     topo_list = stn_to_sat_vec.at(timescales)
 
     # - convert to elevations, azimuths:
     el, az, dist = topo_list.altaz()
-    prop_data['el_deg'] = el.degrees
-    prop_data['az_deg'] = az.degrees
+    prop_data["el_deg"] = el.degrees
+    prop_data["az_deg"] = az.degrees
 
     # Visibility filter: Cut everything that is below threshold
     # - add True/False map-column
@@ -84,7 +86,6 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -
             start_idx = pass_start_indices[idx - 1]
         plt.rc("font", size=font_sz)  # controls default text sizes
 
-
         # Make the plot. Below returns a matplotlib.axes.AxesSubplot object
         pass_data = visible_data.iloc[start_idx:flyby]
         pass_data.plot(
@@ -96,7 +97,7 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -
             title=f'{sc} from {station["name"]}: Pass {idx + 1}',
             fontsize=font_sz,
             zorder=0,
-            ms=2,               # marker size
+            ms=2,  # marker size
         )
 
         xtic_locs = [0, 90, 180, 270, 360]
@@ -111,7 +112,7 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -
         # Set up Start/End text box:
         start_time = pass_data["datetime"].iloc[0].replace(tzinfo=None)
         end_time = pass_data["datetime"].iloc[-1].replace(tzinfo=None)
-        txt_str = f'Start: {start_time}    |    End: {end_time} UTC'
+        txt_str = f"Start: {start_time}    |    End: {end_time} UTC"
 
         # - these are matplotlib.patch.Patch properties
         bbox_props = dict(boxstyle="round", facecolor="white", alpha=0.5)
