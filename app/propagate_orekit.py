@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 
-def generate_predicts(tle: list, station: dict, days: float, sc: str) -> list:
+def generate_orekit_predicts(tle: list, station: dict, days: float, sc: str) -> list:
     pd.options.mode.chained_assignment = None  # default='warn'
 
     vm = orekit.initVM()
