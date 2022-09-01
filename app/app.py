@@ -90,28 +90,7 @@ def server_static(filepath):
 
 
 def fetch_tle(norad_id: str) -> list:
-    """Logs into spacetrack.org and downloads the latest TLE based on the input NORAD ID"""
-    cred_file = "spacetrack_login.txt"
-    uri_base = "https://www.space-track.org"
-    request_login = "/ajaxauth/login"
-
-    # Fetch login credentials:
-    with open(cred_file, "r") as f:
-        creds = f.readlines()
-    site_cred = {"identity": creds[0].strip(), "password": creds[1].strip()}
-
-    # The API below is set to return a '3le': First line label, followed by TLE lines
-    api_url = (
-        f"https://www.space-track.org/basicspacedata/query/class/tle_latest/NORAD_CAT_ID/{norad_id}/"
-        f"orderby/OBJECT_ID asc/limit/2/format/3le/emptyresult/show"
-    )
-
     with requests.Session() as session:
-        # # Log in:
-        # resp = session.post(uri_base + request_login, data=site_cred)
-        # if resp.status_code != 200:
-        #     print(f"- Spacetrack login not ok. Reason: {resp.reason}")
-
         # Make request to celestrak:
         # - this actually returns a 3LE, not a TLE
         api_url = (
