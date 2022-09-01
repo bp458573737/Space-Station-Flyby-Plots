@@ -2,17 +2,14 @@
 Propagate TLE with skyfield library and return Az/El
 """
 
-from math import radians, pi
+from datetime import datetime, timedelta
+from pathlib import Path
 from skyfield.api import EarthSatellite
 from skyfield.api import load, wgs84
 from skyfield.api import N, S, E, W
 from skyfield.api import utc, Time
 import pandas as pd
 import matplotlib.pyplot as plt
-import time
-
-# import plotly.express as px
-from datetime import datetime, timedelta
 
 
 def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -> list:
@@ -156,12 +153,12 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -
         )
 
         # Make plot files
-        plt_path = f".\\static\\plots_temp\\plt_{idx}.png"
+        # - using the Path module here so that slashes get treated properly on Windows or Unix servers
+        plt_path = Path(f"./static/plots_temp/plt_{idx}.png")
         plt.savefig(plt_path)
 
-        # Format the relative path relative to template that will display it, eg. './plots_temp/<img>'
-        plt_name = plt_path.split("\\static\\", 1)[-1]
-        plt_lst.append(plt_name)
+        # Format the relative path relative to the template that will display it, eg. './plots_temp/<img>'
+        plt_lst.append(f"./plots_temp/{plt_path.name}")
 
     plt.close("all")
     print(f"plt_lst from propagate: {plt_lst}")

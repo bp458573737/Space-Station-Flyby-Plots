@@ -4,6 +4,7 @@
 # - A 'generate' button will then call either a propagator from the OREKIT or Skyfield astrodynamics
 # libraries, and the data will be plotted. The plots will appear on the main UI page below the inputs
 
+import bottle
 from bottle import (
     redirect,
     route,
@@ -84,6 +85,7 @@ def server_static(filepath):
     """
     return static_file(filepath, root="./static")
 
+
 # --- End Routes ---
 
 
@@ -105,8 +107,16 @@ def fetch_tle(norad_id: str) -> list:
     )
 
     with requests.Session() as session:
-        # Log in:
-        resp = session.post(uri_base + request_login, data=site_cred)
+        # # Log in:
+        # resp = session.post(uri_base + request_login, data=site_cred)
+        # if resp.status_code != 200:
+        #     print(f"- Spacetrack login not ok. Reason: {resp.reason}")
+
+        # Make request to celestrak:
+        # - this actually returns a 3LE, not a TLE
+        api_url = (
+            f"https://celestrak.org/NORAD/elements/gp.php?CATNR={norad_id}&FORMAT=TLE"
+        )
 
         # Request TLE:
         resp = session.get(api_url)
@@ -117,17 +127,27 @@ def fetch_tle(norad_id: str) -> list:
     return tle
 
 
-if __name__ == "__main__":
-    # --- Settings ---
-    # Dev or production?
-    # - If true, runs reloader, which watches for file changes and restarts the server, plus debug messages
-    # dev = True
-    dev = False
-
-    app = Bottle()
-    # app.run(host='localhost', port=8080)
-
+# --- Settings ---
+# Dev or production?
+# - If true, runs reloader, which watches for file changes and restarts the server, plus debug messages
+# dev = True
+dev = False
+if dev:
     debug(dev)
+
+
+# Start the app: This should NOT be in a 'if __main__' section for production since the 'app' needs to be
+# imported by the WGSI config file
+# app = Bottle()
+app = bottle.default_app()
+
+
+# Production vs local dev: production env will have a dummy 'production.py' file
+try:
+    import production
+except:
+    # Below should NOT run in production
+    # app.run(host='localhost', port=8080)  # use this to configure custom IP for local hosting. Optional line
     run(
         reloader=dev
     )  # watches for file changes, so server restarts not required in dev
