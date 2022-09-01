@@ -20,7 +20,9 @@ def clear_plt_folder():
         os.remove(Path(plt_root + plt))
 
 
-def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str, min_el: float) -> list:
+def generate_skyfield_predicts(
+    tle: list, station: dict, days: float, sc: str, min_el: float
+) -> list:
     # Set pandas to not warn about chained assignment, it's ok in this case which it cannot discern
     pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -78,7 +80,7 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str, m
 
     # Plot: Use PANDAS package for plotting, based on matplotlib
     start_idx = 0
-    font_sz = 10
+    font_sz = 7
     plt.style.use("dark_background")
     plt_lst = []
 
@@ -94,13 +96,16 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str, m
             x="az_deg",
             y="el_deg",
             style=".",
-            figsize=(7, 5),
+            figsize=(5, 3),
             legend=False,
             title=f'{sc} from {station["name"]}: Pass {idx + 1}',
             fontsize=font_sz,
             zorder=0,
             ms=2,  # marker size
         )
+
+        # Plot a horizontal line to mark the user's min elevation cut-off:
+        plt.axhline(min_el, linestyle="dashed", color="white")
 
         xtic_locs = [0, 90, 180, 270, 360]
         xtic_labels = ["North", "East", "South", "West", "North"]
@@ -160,7 +165,7 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str, m
         # Make plot files
         # - using the Path module here so that slashes get treated properly on Windows or Unix servers
         plt_path = Path(f"./static/plots_temp/plt_{idx}.png")
-        plt.savefig(plt_path)
+        plt.savefig(plt_path, dpi=150)
 
         # Format the relative path relative to the template that will display it, eg. './plots_temp/<img>'
         plt_lst.append(f"./plots_temp/{plt_path.name}")
