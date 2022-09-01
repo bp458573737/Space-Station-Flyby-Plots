@@ -17,7 +17,7 @@ from bottle import (
     debug,
     post,
 )
-from propagate_py_sgp4 import generate_skyfield_predicts
+from propagate_py_sgp4 import generate_skyfield_predicts, clear_plt_folder
 import requests
 
 # Set up spacecraft and viewing location options:
@@ -31,6 +31,7 @@ locations_dict = {
 
 spacecraft_dict = {
     "International Space Station (USA)": 25544,
+    "LEO1": 43113,
     "Tiangong (China)": 48274,
 }
 
@@ -61,6 +62,9 @@ def generate():
     # - Skyfield:
     #   from propagate_py_sgp4 import generate_skyfield_predicts
     #   plt_lst = generate_skyfield_predicts(tle, station, days, sc_name)
+
+    # Remove previous plot files
+    clear_plt_folder()
     plt_lst = generate_skyfield_predicts(tle, station, days, sc_name)
     print("- Done!")
 
@@ -113,7 +117,6 @@ def fetch_tle(norad_id: str) -> list:
 dev = False
 if dev:
     debug(dev)
-
 
 # Start the app: This should NOT be in a 'if __main__' section for production since the 'app' needs to be
 # imported by the WGSI config file

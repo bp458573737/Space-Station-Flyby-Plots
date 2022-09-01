@@ -6,10 +6,18 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from skyfield.api import EarthSatellite
 from skyfield.api import load, wgs84
-from skyfield.api import N, S, E, W
-from skyfield.api import utc, Time
+from skyfield.api import N, E
+from skyfield.api import utc
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
+
+
+def clear_plt_folder():
+    """Self-clearing mechanism for the temp plot folder so images don't accumulate"""
+    plt_root = "./static/plots_temp/"  # cwd is 'app/'
+    for plt in os.listdir(plt_root):
+        os.remove(Path(plt_root + plt))
 
 
 def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -> list:
@@ -161,5 +169,4 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -
         plt_lst.append(f"./plots_temp/{plt_path.name}")
 
     plt.close("all")
-    print(f"plt_lst from propagate: {plt_lst}")
     return plt_lst
