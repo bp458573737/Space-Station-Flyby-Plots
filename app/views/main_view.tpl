@@ -63,9 +63,16 @@
                                     <option>4</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label for="min_elSelect" class="form-label mt-4">Low elevation cut-off (start/end passes at this value)</label>
+                                <select class="form-select form-select-sm" id="min_elSelect" name="min_el">
+                                    % for i in range(16):
+                                        <option>{{i}}</option>
+                                    % end
+                                </select>
+                            </div>
                             <button type="submit" class="btn btn-primary my-3">Generate predicts</button>
                          </fieldset>
-
                     </form>
                 </div>
             </div>

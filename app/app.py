@@ -54,6 +54,7 @@ def generate():
     # Fetch TLE from spacetrack
     tle = fetch_tle(spacecraft_dict[sc_name])
     days = float(request_params["duration"][0])
+    min_el = float(request_params["min_el"][0])
 
     # Here is where you can toggle between propagation with Skyfield or OREKIT
     # - OREKIT:
@@ -65,7 +66,7 @@ def generate():
 
     # Remove previous plot files
     clear_plt_folder()
-    plt_lst = generate_skyfield_predicts(tle, station, days, sc_name)
+    plt_lst = generate_skyfield_predicts(tle, station, days, sc_name, min_el)
     print("- Done!")
 
     args = ["plots.tpl", locations_dict.keys(), spacecraft_dict.keys(), plt_lst]

@@ -20,7 +20,7 @@ def clear_plt_folder():
         os.remove(Path(plt_root + plt))
 
 
-def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -> list:
+def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str, min_el: float) -> list:
     # Set pandas to not warn about chained assignment, it's ok in this case which it cannot discern
     pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -31,9 +31,6 @@ def generate_skyfield_predicts(tle: list, station: dict, days: float, sc: str) -
     now = now.replace(microsecond=0).replace(
         tzinfo=utc
     )  # utc obj is from skyfield, but could also use datetime.timezone.utc
-
-    # Set min elevation to filter out useless passes
-    min_el = 5.0  # degrees
 
     # Set up station:
     station_sf = wgs84.latlon(station["coords"][0] * N, station["coords"][1] * E)
