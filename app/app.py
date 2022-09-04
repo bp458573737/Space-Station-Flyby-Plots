@@ -30,7 +30,7 @@ locations_dict = {
 }
 
 spacecraft_dict = {
-    "International Space Station (USA)": 25544,
+    "International Space Station": 25544,
     "LEO1": 43113,
     "Tiangong (China)": 48274,
 }
@@ -41,6 +41,12 @@ spacecraft_dict = {
 def home():
     args = ["splash.tpl", locations_dict.keys(), spacecraft_dict.keys()]
     return template("main_view.tpl", content=args)
+
+
+@post("/start")
+def start():
+    """Return HTMX that will automatically send a GET to generate function, and show a spinner"""
+    return template('generating.tpl')
 
 
 @get("/generate")
@@ -70,14 +76,9 @@ def generate():
     print("- Done!")
 
     args = ["plots.tpl", locations_dict.keys(), spacecraft_dict.keys(), plt_lst]
-    return template("main_view.tpl", content=args)
 
-
-@route("/generating")
-def generating():
-    """Simple waiting page with spinner while propagation takes place. Will flesh this out with Alpine"""
-    args = ["spin.tpl", locations_dict.keys(), spacecraft_dict.keys()]
-    return template("main_view.tpl", content=args)
+    # plots.tpl has incoming payload labeled as 'data', hence 'data' and not 'contents' below
+    return template("plots.tpl", data=args[1:])
 
 
 # set up path to static files and artifacts. This allows for relative path to static

@@ -10,8 +10,8 @@
     </div>
 % else:
     % for plt in plt_lst:
-        <div class="my-2">
-        <img src="{{plt}}" class="img-fluid" alt="Responsive image">
+        <div class="my-4">
+            <img src="{{plt}}" class="img-fluid border border-1 border-secondary" alt="Responsive image">
         </div>
     % end
 % end

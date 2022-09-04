@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="./Bootswatch_ Slate_files/font-awesome.min.css">
 <!--    <link rel="stylesheet" href="./Bootswatch_ Slate_files/prism-okaidia.css">-->
     <link rel="stylesheet" href="./Bootswatch_ Slate_files/custom.min.css">
-<!--    <script async="" src="./Bootswatch_ Slate_files/js"></script>-->
+
     </head>
 <body>
     <div class="container">
@@ -30,8 +30,8 @@
 
         <div class="row">
             <div class="col-md-4">
-                <div class="bs-component">
-                    <form action='/generate' method="GET">
+                <div class="bs-component" >
+                    <form id='inputs' hx-post="/start" hx-target="#info" hx-swap="innerHTML">
                         <fieldset class="form-group px-1">
                             <legend class="mt-4">Configure Predicts</legend>
                             <div class="form-group">
@@ -71,22 +71,27 @@
                                     % end
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary my-3">Generate predicts</button>
+                            <button type="submit" class="btn btn-primary my-3">
+                                Generate predicts</button>
                          </fieldset>
                     </form>
                 </div>
             </div>
         </div>
         <hr>
-        <div class="container-fluid overflow-auto">
+        <div class="container-fluid overflow-auto" id="info">
             %# Below presents a sub-template
             % include(content[0], data=content[1:])
         </div>
+    </div>
 
 
 <!--    <script src="./Bootswatch_ Slate_files/jquery.min.js.download"></script>-->
     <script src="./Bootswatch_ Slate_files/bootstrap.bundle.min.js.download"></script>
 <!--    <script src="./Bootswatch_ Slate_files/prism.js.download" data-manual=""></script>-->
     <script src="./Bootswatch_ Slate_files/custom.js.download"></script>
+    <script src="https://unpkg.com/htmx.org@1.8.0"
+    integrity="sha384-cZuAZ+ZbwkNRnrKi05G/fjBX+azI9DNOkNYysZ0I/X5ZFgsmMiBXgDZof30F5ofc"
+    crossorigin="anonymous"></script>
 </body>
 </html>
