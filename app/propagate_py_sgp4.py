@@ -44,55 +44,79 @@ def generate_skyfield_predicts(
     # Build station to sat vector object which will be propagated via time-steps
     stn_to_sat_vec = satellite - station_sf
 
-    print("- Starting propagation...")
-
-    # Create list of timescale objects which will seed a dataframe for data:
-    datetimes = [(now + timedelta(seconds=t)) for t in range(secs + 1)]
+    # Start/End times of entire span to feed into visibility search:
+    datetimes = (now, now + timedelta(seconds=secs))
     timescales = ts.from_datetimes(datetimes)
 
-    # Set up dataframe with time-series and fill columns with vectorized functions:
-    prop_data = pd.DataFrame(datetimes, columns=["datetime"])
+    # Search for passes in time-range and capture start/end TimeScales of each one:
+    times, events = satellite.find_events(station_sf, timescales[0], timescales[-1], altitude_degrees=min_el)
+    passes = list()
+    for idx, elem in enumerate(zip(times, events)):
+        if elem[1] != 1 and (idx + 1) % 3 == 0 and idx != 0:
+            # For every third-index, ignore out middle event (max el), and record events 1 and 3 (rise and set)
+            # Event idx: 0=Rise above min_el, 1=Max el, 2=Set below min_el
+            passes.append((times[idx-2], times[idx]))
+    # print(f"pass times: {passes}")
 
-    # - get list of sat-stn vectors at time instances. This is essentially the propagator
-    topo_list = stn_to_sat_vec.at(timescales)
-
-    # - convert to elevations, azimuths:
-    el, az, dist = topo_list.altaz()
-    prop_data["el_deg"] = el.degrees
-    prop_data["az_deg"] = az.degrees
-
-    # Visibility filter: Cut everything that is below threshold
-    # - add True/False map-column
-    visible_data = prop_data[prop_data["el_deg"] > min_el]
-    # - filter out the False
-    if visible_data.shape[0] == 0:
+    pass_count = len(passes)
+    if pass_count == 0:
         print("- No passes in the specified time range!")
         return ["*** No passes in the specified time range! ***"]
 
-    visible_data.reset_index(inplace=True)
+    # Propagate for each individual pass:
+    plt_lst = []    # list to be returned to controller
+    clear_plt_folder()
+    print(f"- Creating {pass_count} plots")
 
-    # Find and label passes in the main dataframe:
-    visible_data["time_delta"] = visible_data["datetime"].diff().dt.total_seconds()
-    pass_start_indices = visible_data[visible_data["time_delta"] > step_sec].index
-    if len(pass_start_indices) == 0:
-        # then there is only one pass
-        pass_start_indices = [visible_data.shape[0] - 1]
+    for idx, flyby_times in enumerate(passes):
+        # Create set of timescale objects at high resolution which will seed a dataframe for data:
+        # - First need to convert existing start/end timescales to datetime, then add time delta, convert back
+        fb_start_dt = flyby_times[0].utc_datetime()
+        fb_end_dt = flyby_times[1].utc_datetime()
+        fb_datetimes = list()
+        step = 0
+        step_size = timedelta(seconds=step_sec)
+        steps = int((fb_end_dt - fb_start_dt) / step_size)
 
-    # Plot: Use PANDAS package for plotting, based on matplotlib
-    start_idx = 0
-    font_sz = 7
-    plt.style.use("dark_background")
-    plt_lst = []
+        while step <= steps:
+            fb_datetimes.append(fb_start_dt + step*step_size)
+            step += 1
 
-    print(f"- Creating {len(pass_start_indices)} plots")
-    for idx, flyby in enumerate(pass_start_indices):
-        if idx != 0:
-            start_idx = pass_start_indices[idx - 1]
+        fb_timescales = ts.from_datetimes(fb_datetimes)
+
+        # Set up dataframe with time-series and fill columns with vectorized functions:
+        prop_data = pd.DataFrame(fb_datetimes, columns=["datetime"])
+
+        # - get list of sat-stn vectors at time instances. This is essentially the propagator
+        topo_list = stn_to_sat_vec.at(fb_timescales)
+
+        # - convert to elevations, azimuths:
+        el, az, dist = topo_list.altaz()
+        prop_data["el_deg"] = el.degrees
+        prop_data["az_deg"] = az.degrees
+
+        # Visibility filter: Cut everything that is below threshold
+        # - add True/False map-column
+        # visible_data = prop_data[prop_data["el_deg"] > min_el]
+        # # - filter out the False
+        #
+        # visible_data.reset_index(inplace=True)
+        #
+        # # Find and label passes in the main dataframe:
+        # visible_data["time_delta"] = visible_data["datetime"].diff().dt.total_seconds()
+        # pass_start_indices = visible_data[visible_data["time_delta"] > step_sec].index
+        # if len(pass_start_indices) == 0:
+        #     # then there is only one pass
+        #     pass_start_indices = [visible_data.shape[0] - 1]
+
+        # Plot: Use PANDAS package for plotting, based on matplotlib
+        font_sz = 7
+        plt.style.use("dark_background")
+
         plt.rc("font", size=font_sz)  # controls default text sizes
 
         # Make the plot. Below returns a matplotlib.axes.AxesSubplot object
-        pass_data = visible_data.iloc[start_idx:flyby]
-        pass_data.plot(
+        prop_data.plot(
             x="az_deg",
             y="el_deg",
             style=".",
@@ -117,8 +141,8 @@ def generate_skyfield_predicts(
         plt.rc("font", size=font_sz)  # controls default text sizes
 
         # Set up Start/End text box:
-        start_time = pass_data["datetime"].iloc[0].replace(tzinfo=None)
-        end_time = pass_data["datetime"].iloc[-1].replace(tzinfo=None)
+        start_time = prop_data["datetime"].iloc[0].replace(tzinfo=None, microsecond=0)
+        end_time = prop_data["datetime"].iloc[-1].replace(tzinfo=None, microsecond=0)
         txt_str = f"Start: {start_time}    |    End: {end_time} UTC"
 
         # - these are matplotlib.patch.Patch properties
@@ -133,19 +157,19 @@ def generate_skyfield_predicts(
 
         # Add direction arrow:
         # - arrow tail coords:
-        arrow_y = pass_data["el_deg"].max()
-        arrow_tail_x = pass_data[pass_data["el_deg"] == arrow_y]["az_deg"].item()
+        arrow_y = prop_data["el_deg"].max()
+        arrow_tail_x = prop_data[prop_data["el_deg"] == arrow_y]["az_deg"].item()
 
         # - arrow dir:
-        arrow_x_idx = pass_data["el_deg"].idxmax()
+        arrow_x_idx = prop_data["el_deg"].idxmax()
         if arrow_x_idx != 0:
             sign = (
-                arrow_tail_x - pass_data.loc[arrow_x_idx - 1]["az_deg"]
+                arrow_tail_x - prop_data.loc[arrow_x_idx - 1]["az_deg"]
             )  # if sign +ve, arrow ->, else <-
         else:
             # Pass has started AT the max elevation at the beginning of propagation
             sign = (
-                pass_data.loc[arrow_x_idx + 1]["az_deg"] - arrow_tail_x
+                prop_data.loc[arrow_x_idx + 1]["az_deg"] - arrow_tail_x
             )  # if sign +ve, arrow ->, else <-
 
         # - arrow head coords:
@@ -164,7 +188,9 @@ def generate_skyfield_predicts(
 
         # Make plot files
         # - using the Path module here so that slashes get treated properly on Windows or Unix servers
-        plt_path = Path(f"./static/plots_temp/plt_{idx}.png")
+        # - name them something unique to work with browser caching (same names with different data won't reload)
+        plt_name = f'{sc}_{station["name"]}_{datetime.now().microsecond}_{min_el}'
+        plt_path = Path(f"./static/plots_temp/{plt_name}.png")
         plt.savefig(plt_path, dpi=150)
 
         # Format the relative path relative to the template that will display it, eg. './plots_temp/<img>'

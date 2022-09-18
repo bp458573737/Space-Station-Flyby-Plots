@@ -31,14 +31,15 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="bs-component" >
-                    <form id='inputs' hx-post="/start" hx-target="#info" hx-swap="innerHTML">
+                    <form id='inputs' hx-post="/start" hx-target="#info" hx-swap="innerHTML"
+                          _="on htmx:afterRequest reset() #inputs">
                         <fieldset class="form-group px-1">
                             <legend class="mt-4">Configure Predicts</legend>
                             <div class="form-group">
                                 <label for="locationSelect" class="form-label mt-4">Select viewing location</label>
                                 <select class="form-select form-select-sm" id="locationSelect" name="location">
                                     % for loc in locations:
-                                        % if loc == 'San Francisco':
+                                        % if loc == 'Ottawa':
                                             <option selected>{{loc}}</option>
                                         % else:
                                             <option>{{loc}}</option>
@@ -65,14 +66,11 @@
                             </div>
                             <div class="form-group">
                                 <label for="min_elSelect" class="form-label mt-4">Low elevation cut-off (start/end passes at this value)</label>
-                                <select class="form-select form-select-sm" id="min_elSelect" name="min_el">
-                                    % for i in range(16):
-                                        <option>{{i}}</option>
-                                    % end
-                                </select>
+                                <input id="min_elSelect" type="number" name="min_el" value="10">
                             </div>
-                            <button type="submit" class="btn btn-primary my-3">
-                                Generate predicts</button>
+                            <button type="submit" class="btn btn-primary my-3"                                    >
+                                    Generate predicts
+                            </button>
                          </fieldset>
                     </form>
                 </div>
@@ -80,7 +78,7 @@
         </div>
         <hr>
         <div class="container-fluid overflow-auto" id="info">
-            %# Below presents a sub-template
+            %# Below presents a sub-template with arguments/data
             % include(content[0], data=content[1:])
         </div>
     </div>

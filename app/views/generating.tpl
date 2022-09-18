@@ -7,5 +7,4 @@
         <h6>Generating predicts...</h6>
         <span class="spinner-grow spinner-grow-sm text-light mx-4" role="status"></span>
     </div>
-
 </div>

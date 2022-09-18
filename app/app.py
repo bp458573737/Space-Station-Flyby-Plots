@@ -72,13 +72,13 @@ def generate():
     #   plt_lst = generate_skyfield_predicts(tle, station, days, sc_name)
 
     # Remove previous plot files
-    clear_plt_folder()
     plt_lst = generate_skyfield_predicts(tle, station, days, sc_name, min_el)
     print("- Done!")
 
     args = ["plots.tpl", locations_dict.keys(), spacecraft_dict.keys(), plt_lst]
 
     # plots.tpl has incoming payload labeled as 'data', hence 'data' and not 'contents' below
+    # return template("main_view.tpl", content=args)
     return template("plots.tpl", data=args[1:])
 
 
