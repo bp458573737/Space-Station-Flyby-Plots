@@ -33,6 +33,7 @@ spacecraft_dict = {
     "International Space Station": 25544,
     "LEO1": 43113,
     "Tiangong (China)": 48274,
+    "Radarsat-2": 32382,
 }
 
 
@@ -113,12 +114,6 @@ def fetch_tle(norad_id: str) -> list:
 
 
 # --- Settings ---
-# Dev or production?
-# - If true, runs reloader, which watches for file changes and restarts the server, plus debug messages
-# dev = True
-dev = False
-if dev:
-    debug(dev)
 
 # Start the app: This should NOT be in a 'if __main__' section for production since the 'app' needs to be
 # imported by the WGSI config file
@@ -129,9 +124,7 @@ app = bottle.default_app()
 # Production vs local dev: production env will have a dummy 'production.py' file
 try:
     import production
-except:
-    # Below should NOT run in production
-    # app.run(host='localhost', port=8080)  # use this to configure custom IP for local hosting. Optional line
+except ImportError:
     run(
-        reloader=dev
+        reloader=True
     )  # watches for file changes, so server restarts not required in dev
