@@ -28,7 +28,7 @@
       </div>
 
         <div class="row">
-            <div class="col col-lg-4">
+            <div class="col col-lg-5">
                 <div class="bs-component">
                     <form id='inputs' hx-post="/start" hx-target="#info" hx-swap="innerHTML"
                           _="on htmx:afterRequest reset() #inputs">
