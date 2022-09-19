@@ -125,7 +125,7 @@ def generate_skyfield_predicts(
             title=f'{sc} from {station["name"]}: Pass {idx + 1}',
             fontsize=font_sz,
             zorder=0,
-            ms=2,  # marker size
+            ms=4,  # marker size
         )
 
         # Plot a horizontal line to mark the user's min elevation cut-off:
