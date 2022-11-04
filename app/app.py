@@ -23,6 +23,7 @@ import requests
 # Set up spacecraft and viewing location options:
 # - lat/lon degs E
 locations_dict = {
+    "Allan Park": [44.176, -80.934],
     "Karachi": [24.86, 67.01],
     "Lisbon": [38.736, -9.1426],
     "Ottawa": [45.334904, -75.724098],
