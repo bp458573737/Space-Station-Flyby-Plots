@@ -33,7 +33,7 @@ locations_dict = {
 spacecraft_dict = {
     "International Space Station": 25544,
     "Iridium161":43478,
-    "LEO1": 43113,
+    "LEO3": 57392,
     "Tiangong (China)": 48274,
     "Radarsat-2": 32382,
 }
