@@ -40,7 +40,7 @@
                                 <div class="col-sm-8">
                                     <select class="form-select form-select-sm" id="locationSelect" name="location">
                                         % for loc in locations:
-                                            % if loc == 'Ottawa':
+                                            % if loc == 'Allan Park':
                                                 <option selected>{{loc}}</option>
                                             % else:
                                                 <option>{{loc}}</option>
