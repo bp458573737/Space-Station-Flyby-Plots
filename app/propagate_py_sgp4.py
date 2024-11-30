@@ -16,8 +16,11 @@ import os
 def clear_plt_folder():
     """Self-clearing mechanism for the temp plot folder so images don't accumulate"""
     plt_root = "./static/plots_temp/"  # cwd is 'app/'
-    for plt in os.listdir(plt_root):
-        os.remove(Path(plt_root + plt))
+    if os.path.isdir(plt_root):
+        for plt in os.listdir(plt_root):
+            os.remove(Path(plt_root + plt))
+    else:
+        os.mkdir(plt_root)
 
 
 def generate_skyfield_predicts(
@@ -95,22 +98,8 @@ def generate_skyfield_predicts(
         prop_data["el_deg"] = el.degrees
         prop_data["az_deg"] = az.degrees
 
-        # Visibility filter: Cut everything that is below threshold
-        # - add True/False map-column
-        # visible_data = prop_data[prop_data["el_deg"] > min_el]
-        # # - filter out the False
-        #
-        # visible_data.reset_index(inplace=True)
-        #
-        # # Find and label passes in the main dataframe:
-        # visible_data["time_delta"] = visible_data["datetime"].diff().dt.total_seconds()
-        # pass_start_indices = visible_data[visible_data["time_delta"] > step_sec].index
-        # if len(pass_start_indices) == 0:
-        #     # then there is only one pass
-        #     pass_start_indices = [visible_data.shape[0] - 1]
-
         # Plot: Use PANDAS package for plotting, based on matplotlib
-        font_sz = 7
+        font_sz = 8
         plt.style.use("dark_background")
 
         plt.rc("font", size=font_sz)  # controls default text sizes
@@ -122,11 +111,16 @@ def generate_skyfield_predicts(
             style=".",
             figsize=(5, 3),
             legend=False,
-            title=f'{sc} from {station["name"]}: Pass {idx + 1}',
+            # title=f'{sc} from {station["name"]}: Pass {idx + 1}',
             fontsize=font_sz,
             zorder=0,
             ms=4,  # marker size
         )
+
+        # Better title adjustments:
+        plt.title(f'{sc}, {station["name"]}: Pass {idx + 1}', fontsize=10, fontweight='bold')
+
+        plt.subplots_adjust(bottom=0.26)    # provide margin for start/end time label
 
         # Plot a horizontal line to mark the user's min elevation cut-off:
         plt.axhline(min_el, linestyle="dashed", color="white")
@@ -135,7 +129,7 @@ def generate_skyfield_predicts(
         xtic_labels = ["North", "East", "South", "West", "North"]
         plt.xticks(xtic_locs, xtic_labels)
         plt.ylabel("Elevation (deg)")
-        plt.xlabel("Azimuth")
+        plt.xlabel("Azimuth (deg)")
         plt.ylim(0, 90)
         plt.xlim(0, 360)
         plt.rc("font", size=font_sz)  # controls default text sizes
@@ -148,8 +142,8 @@ def generate_skyfield_predicts(
         # - these are matplotlib.patch.Patch properties
         bbox_props = dict(boxstyle="round", facecolor="white", alpha=0.5)
         plt.text(
-            plt.xlim()[1] * 0.08,
-            plt.ylim()[1] * 0.92,
+            plt.xlim()[1] * 0.04,
+            plt.ylim()[1] * -0.35,
             txt_str,
             fontsize=font_sz,
             bbox=bbox_props,
@@ -174,13 +168,13 @@ def generate_skyfield_predicts(
 
         # - arrow head coords:
         arr_len = 10 * (sign / abs(sign))
-        arr_width = 1.0
+        arr_width = 1.5
         plt.arrow(
             arrow_tail_x,
-            arrow_y,
+            arrow_y + 3,
             arr_len,
             0,
-            overhang=0.3,
+            overhang=0.1,
             width=arr_width,
             head_width=4 * arr_width,
             color="white",
@@ -191,7 +185,7 @@ def generate_skyfield_predicts(
         # - name them something unique to work with browser caching (same names with different data won't reload)
         plt_name = f'{sc}_{station["name"]}_{datetime.now().microsecond}_{min_el}'
         plt_path = Path(f"./static/plots_temp/{plt_name}.png")
-        plt.savefig(plt_path, dpi=150)
+        plt.savefig(plt_path, dpi=175)
 
         # Format the relative path relative to the template that will display it, eg. './plots_temp/<img>'
         plt_lst.append(f"./plots_temp/{plt_path.name}")

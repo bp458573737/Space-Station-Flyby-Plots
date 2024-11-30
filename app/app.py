@@ -6,15 +6,15 @@
 
 import bottle
 from bottle import (
-    redirect,
+    # redirect,
     route,
     run,
     template,
-    Bottle,
+    # Bottle,
     get,
     request,
     static_file,
-    debug,
+    # debug,
     post,
 )
 from propagate_py_sgp4 import generate_skyfield_predicts, clear_plt_folder
@@ -60,7 +60,7 @@ def generate():
     station = {"name": location, "coords": locations_dict[location]}
     sc_name = request_params["spacecraft"][0]
 
-    # Fetch TLE from spacetrack
+    # Fetch TLE from celestrak
     tle = fetch_tle(spacecraft_dict[sc_name])
     days = float(request_params["duration"][0])
     min_el = float(request_params["min_el"][0])
@@ -74,6 +74,9 @@ def generate():
     #   plt_lst = generate_skyfield_predicts(tle, station, days, sc_name)
 
     # Remove previous plot files
+    clear_plt_folder()
+
+    # - Skyfield propagation
     plt_lst = generate_skyfield_predicts(tle, station, days, sc_name, min_el)
     print("- Done!")
 
@@ -128,5 +131,5 @@ try:
     import production
 except ImportError:
     run(
-        reloader=True
+        reloader=True, port=8081
     )  # watches for file changes, so server restarts not required in dev
