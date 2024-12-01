@@ -52,13 +52,15 @@ def generate_skyfield_predicts(
     timescales = ts.from_datetimes(datetimes)
 
     # Search for passes in time-range and capture start/end TimeScales of each one:
-    times, events = satellite.find_events(station_sf, timescales[0], timescales[-1], altitude_degrees=min_el)
+    times, events = satellite.find_events(
+        station_sf, timescales[0], timescales[-1], altitude_degrees=min_el
+    )
     passes = list()
     for idx, elem in enumerate(zip(times, events)):
         if elem[1] != 1 and (idx + 1) % 3 == 0 and idx != 0:
             # For every third-index, ignore out middle event (max el), and record events 1 and 3 (rise and set)
             # Event idx: 0=Rise above min_el, 1=Max el, 2=Set below min_el
-            passes.append((times[idx-2], times[idx]))
+            passes.append((times[idx - 2], times[idx]))
     # print(f"pass times: {passes}")
 
     pass_count = len(passes)
@@ -67,7 +69,7 @@ def generate_skyfield_predicts(
         return ["*** No passes in the specified time range! ***"]
 
     # Propagate for each individual pass:
-    plt_lst = []    # list to be returned to controller
+    plt_lst = []  # list to be returned to controller
     clear_plt_folder()
     print(f"- Creating {pass_count} plots")
 
@@ -82,7 +84,7 @@ def generate_skyfield_predicts(
         steps = int((fb_end_dt - fb_start_dt) / step_size)
 
         while step <= steps:
-            fb_datetimes.append(fb_start_dt + step*step_size)
+            fb_datetimes.append(fb_start_dt + step * step_size)
             step += 1
 
         fb_timescales = ts.from_datetimes(fb_datetimes)
@@ -118,9 +120,11 @@ def generate_skyfield_predicts(
         )
 
         # Better title adjustments:
-        plt.title(f'{sc}, {station["name"]}: Pass {idx + 1}', fontsize=10, fontweight='bold')
+        plt.title(
+            f'{sc}, {station["name"]}: Pass {idx + 1}', fontsize=10, fontweight="bold"
+        )
 
-        plt.subplots_adjust(bottom=0.26)    # provide margin for start/end time label
+        plt.subplots_adjust(bottom=0.26)  # provide margin for start/end time label
 
         # Plot a horizontal line to mark the user's min elevation cut-off:
         plt.axhline(min_el, linestyle="dashed", color="white")
@@ -167,17 +171,25 @@ def generate_skyfield_predicts(
             )  # if sign +ve, arrow ->, else <-
 
         # - arrow head coords:
-        arr_len = 10 * (sign / abs(sign))
-        arr_width = 1.5
+        arr_len = 8 * (sign / abs(sign))
+        arr_width = 1.4
+
+        # - Arrow y-offset: if peak of plot is near the top, offset down, otherwise up
+        if arrow_y > 80:
+            arr_y_offset = -4
+        else:
+            arr_y_offset = 4
+
         plt.arrow(
             arrow_tail_x,
-            arrow_y + 3,
+            arrow_y + arr_y_offset,
             arr_len,
             0,
             overhang=0.1,
             width=arr_width,
             head_width=4 * arr_width,
             color="white",
+            ec='black'
         )
 
         # Make plot files
