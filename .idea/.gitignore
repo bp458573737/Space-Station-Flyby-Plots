@@ -2,4 +2,4 @@
 /shelf/
 /workspace.xml
 .env
-app\static\plots_temp\.gitkeep
+app/static/plots_temp/.gitkeep
