@@ -4,6 +4,7 @@
 # - A 'generate' button will then call either a propagator from the OREKIT or Skyfield astrodynamics
 # libraries, and the data will be plotted. The plots will appear on the main UI page below the inputs
 
+import os
 import bottle
 from bottle import (
     # redirect,
@@ -17,8 +18,13 @@ from bottle import (
     # debug,
     post,
 )
+from dotenv import load_dotenv
 from propagate_py_sgp4 import generate_skyfield_predicts, clear_plt_folder
+import os
 import requests
+
+# Change to app directory when starting
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # Set up spacecraft and viewing location options:
 # - lat/lon degs E
@@ -38,12 +44,16 @@ spacecraft_dict = {
     "Radarsat-2": 32382,
 }
 
+load_dotenv()  # Load environment variables from .env file
+
+
 
 # --- Routes ---
 @route("/")
 def home():
-    args = ["splash.tpl", locations_dict.keys(), spacecraft_dict.keys()]
-    return template("main_view.tpl", content=args)
+    maps_api_key=os.getenv('GOOGLE_MAPS_API_KEY')
+    args = ["splash.tpl", locations_dict.keys(), spacecraft_dict.keys(), maps_api_key]
+    return template("main_view.tpl", content=args )
 
 
 @post("/start")
@@ -56,8 +66,17 @@ def start():
 def generate():
     request_params = request.params.dict
 
-    location = request_params["location"][0]
+    if request_params["locationChoice"][0] == "customLocation":
+        lat = float(request_params["latitude"][0])
+        lon = float(request_params["longitude"][0])
+        location = f"Custom ({lat:.3f}, {lon:.3f})"
+        locations_dict[location] = [lat, lon]
+
+    elif request_params["locationChoice"][0] == "predefinedLocation":
+        location = request_params["location"][0]
+
     station = {"name": location, "coords": locations_dict[location]}
+
     sc_name = request_params["spacecraft"][0]
 
     # Fetch TLE from celestrak
@@ -96,7 +115,6 @@ def server_static(filepath):
     <script src="/assets/javascript/bootstrap.bundle.min.js"></script>
     """
     return static_file(filepath, root="./static")
-
 
 # --- End Routes ---
 

@@ -101,7 +101,7 @@ def generate_skyfield_predicts(
         prop_data["az_deg"] = az.degrees
 
         # Plot: Use PANDAS package for plotting, based on matplotlib
-        font_sz = 8
+        font_sz = 7
         plt.style.use("dark_background")
 
         plt.rc("font", size=font_sz)  # controls default text sizes
@@ -121,7 +121,7 @@ def generate_skyfield_predicts(
 
         # Better title adjustments:
         plt.title(
-            f'{sc}, {station["name"]}: Pass {idx + 1}', fontsize=10, fontweight="bold"
+            f'{sc}, {station["name"]}: Pass {idx + 1}', fontsize=font_sz+1, fontweight="bold"
         )
 
         plt.subplots_adjust(bottom=0.26)  # provide margin for start/end time label

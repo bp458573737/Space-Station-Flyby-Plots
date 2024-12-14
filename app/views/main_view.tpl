@@ -3,6 +3,7 @@
 
 % locations = content[1]
 % spacecraft = content[2]
+% maps_api_key = content[3]
 
 
 <!DOCTYPE html>
@@ -15,6 +16,8 @@
         <link rel="stylesheet" href="./Bootswatch_ Slate_files/bootstrap.css">
         <link rel="stylesheet" href="./Bootswatch_ Slate_files/font-awesome.min.css">
         <link rel="stylesheet" href="./Bootswatch_ Slate_files/custom.min.css">
+        <!-- Add Google Maps API -->
+        <script src="https://maps.googleapis.com/maps/api/js?key={{maps_api_key}}"></script>
     </head>
     <body>
     <div class="container">
@@ -22,7 +25,7 @@
         <div class="row">
           <div class="col-lg-6">
             <h1>Satellite Flybys</h1>
-            <p class="lead">Visualize a spacecraft's path through the sky near you</p>
+            <p class="lead">Plot a spacecraft's path through the sky</p>
           </div>
         </div>
       </div>
@@ -47,6 +50,23 @@
                                             % end
                                         % end
                                     </select>
+                                    <!-- Add custom location option -->
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="radio" name="locationChoice" id="predefinedLocation" value="predefinedLocation"checked>
+                                        <label class="form-check-label" for="predefinedLocation">
+                                            Use predefined location
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="locationChoice" id="customLocation" value="customLocation">
+                                        <label class="form-check-label" for="customLocation">
+                                            Pick location from map
+                                        </label>
+                                    </div>
+                                    <!-- Add map container -->
+                                    <div id="map" style="height: 300px; display: none;" class="mt-2"></div>
+                                    <input type="hidden" id="latitude" name="latitude">
+                                    <input type="hidden" id="longitude" name="longitude">
                                 </div>
                             </div>
                             <div class="form-group">
@@ -97,5 +117,55 @@
     <script src="https://unpkg.com/htmx.org@1.8.0"
     integrity="sha384-cZuAZ+ZbwkNRnrKi05G/fjBX+azI9DNOkNYysZ0I/X5ZFgsmMiBXgDZof30F5ofc"
     crossorigin="anonymous"></script>
+    <!-- Add before the closing body tag -->
+    <script>
+        let map;
+        let marker;
+
+        // Initialize the map
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 0, lng: 0 },
+                zoom: 2
+            });
+
+            // Add click listener to create/move marker
+            map.addListener('click', (event) => {
+                const lat = event.latLng.lat();
+                const lng = event.latLng.lng();
+                
+                if (marker) {
+                    marker.setPosition(event.latLng);
+                } else {
+                    marker = new google.maps.Marker({
+                        position: event.latLng,
+                        map: map
+                    });
+                }
+
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lng;
+            });
+        }
+
+        // Handle radio button changes
+        document.querySelectorAll('input[name="locationChoice"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const mapDiv = document.getElementById('map');
+                const locationSelect = document.getElementById('locationSelect');
+                
+                if (e.target.id === 'customLocation') {
+                    mapDiv.style.display = 'block';
+                    locationSelect.disabled = true;
+                    if (!map) {
+                        initMap();
+                    }
+                } else {
+                    mapDiv.style.display = 'none';
+                    locationSelect.disabled = false;
+                }
+            });
+        });
+    </script>
     </body>
 </html>
